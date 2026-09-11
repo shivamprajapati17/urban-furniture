@@ -1,0 +1,207 @@
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Barlow:wght@300;400;500;600&display=swap");
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Design tokens — Urban Furniture design system (docskifile/design (2).md)
+   Warm walnut primary, ledger-green positive, warm off-white canvas.
+   Shape rule: 8px radius on cards/buttons/inputs; pills reserved for badges.
+--------------------------------------------------------------------------- */
+@theme {
+  /* Fonts */
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-heading: "Instrument Serif", serif;
+  --font-body: "Barlow", sans-serif;
+
+  /* Ink (neutrals are warm, never pure grey) */
+  --color-ink: #1f2a24; /* body text */
+  --color-ink-soft: #45534b; /* secondary text */
+  --color-ink-mute: #6e7b72; /* muted / labels */
+  --color-ink-faint: #93a096; /* placeholders, disabled */
+
+  /* Canvas & surfaces */
+  --color-paper: #f5f1ea; /* page background (warm off-white) */
+  --color-paper-deep: #ece5d8; /* recessed panels, table header tint */
+  --color-surface: #ffffff;
+  --color-line: #e3dccf; /* dividers, table lines */
+  --color-line-strong: #d2c8b4;
+
+  /* Primary — walnut brown */
+  --color-walnut-50: #f8f3ec;
+  --color-walnut-100: #efe4d6;
+  --color-walnut-200: #e0cbae;
+  --color-walnut-300: #cdab82;
+  --color-walnut-400: #b88b5c;
+  --color-walnut-500: #a17346;
+  --color-walnut-600: #8b5e34; /* brand primary */
+  --color-walnut-700: #744d2b;
+  --color-walnut-800: #5d3e23;
+  --color-walnut-900: #462f1b;
+
+  /* Positive / paid — ledger green */
+  --color-leaf-50: #eef4f0;
+  --color-leaf-100: #dceadf;
+  --color-leaf-200: #b9d4c1;
+  --color-leaf-500: #4a8a6a;
+  --color-leaf-600: #2f6f4e; /* paid / positive */
+  --color-leaf-700: #275a40;
+  --color-leaf-800: #1f4733;
+  --color-leaf-900: #163525;
+
+  /* Danger / overdue */
+  --color-clay-50: #fbf0ee;
+  --color-clay-100: #f6dfdc;
+  --color-clay-200: #edc0ba;
+  --color-clay-600: #c0392b; /* overdue / debit alerts */
+  --color-clay-700: #9e3024;
+  --color-clay-800: #7e271d;
+
+  /* Pending / draft accents — amber */
+  --color-gold-50: #fbf6e9;
+  --color-gold-100: #f6ebcc;
+  --color-gold-600: #b07f1c;
+  --color-gold-700: #8f6716;
+  --color-gold-500: #d9a441;
+
+  /* Confirmed / posted — muted azure */
+  --color-azure-50: #eef3f8;
+  --color-azure-100: #dce7f0;
+  --color-azure-600: #3b6e9e;
+  --color-azure-700: #315c85;
+
+  /* Elevation: hairline shadows tinted to the warm background */
+  --shadow-card: 0 1px 2px rgb(31 42 36 / 0.04), 0 2px 6px rgb(31 42 36 / 0.05);
+  --shadow-pop: 0 6px 24px -4px rgb(31 42 36 / 0.18), 0 2px 8px rgb(31 42 36 / 0.08);
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+  }
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: var(--color-walnut-200);
+    color: var(--color-ink);
+  }
+  /* Consistent focus ring everywhere */
+  :focus-visible {
+    outline: 2px solid var(--color-walnut-600);
+    outline-offset: 1px;
+    border-radius: 2px;
+  }
+  /* Numeric cells scan cleanly */
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+}
+
+/* Subtle, calm motion only. Reduced-motion users get a static UI. */
+@media (prefers-reduced-motion: no-preference) {
+  .page-enter {
+    animation: page-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes page-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/* Slim scrollbars for the app shell */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-line-strong);
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Bar charts in the budget report stay crisp at small sizes */
+.bar-track {
+  background: var(--color-paper-deep);
+}
+
+/* ---------------------------------------------------------------------------
+   Liquid glassmorphism (CTA visuals on the login brand panel)
+--------------------------------------------------------------------------- */
+@layer components {
+  .liquid-glass-strong {
+    background: rgba(255, 255, 255, 0.01);
+    background-blend-mode: luminosity;
+    backdrop-filter: blur(50px);
+    -webkit-backdrop-filter: blur(50px);
+    border: none;
+    box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .liquid-glass-strong::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.4px;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.2) 20%,
+      rgba(255, 255, 255, 0) 40%,
+      rgba(255, 255, 255, 0) 60%,
+      rgba(255, 255, 255, 0.2) 80%,
+      rgba(255, 255, 255, 0.5) 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Print / save-as-PDF: hide the app chrome, show only the report content.
+--------------------------------------------------------------------------- */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+    color: #000;
+  }
+  main {
+    overflow: visible !important;
+  }
+  main > div {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+  .page-enter {
+    animation: none !important;
+  }
+  .bar-track {
+    background: #ece5d8 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

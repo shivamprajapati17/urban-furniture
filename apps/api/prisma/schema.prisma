@@ -1,0 +1,286 @@
+// Urban Furniture Accounting System - Prisma schema (SQLite)
+// Money stored as Float and rounded to 2 decimals server-side (SQLite connector does not support Decimal).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  accountant
+  contact
+}
+
+enum ContactType {
+  customer
+  vendor
+  both
+}
+
+enum ProductType {
+  goods
+  service
+  combo
+}
+
+enum AccountType {
+  asset
+  liability
+  income
+  expense
+  capital
+}
+
+enum JournalType {
+  sales
+  purchase
+  bank
+  cash
+}
+
+enum SourceType {
+  bill
+  invoice
+  payment
+}
+
+enum PurchaseOrderStatus {
+  draft
+  confirmed
+  billed
+}
+
+enum SalesOrderStatus {
+  draft
+  confirmed
+  invoiced
+}
+
+enum DocStatus {
+  draft
+  posted
+  paid
+  overdue
+}
+
+enum PaymentDirection {
+  in
+  out
+}
+
+enum PaymentMethod {
+  cash
+  bank
+}
+
+enum AnalyticType {
+  income
+  expense
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  contactId    Int?
+  contact      Contact? @relation(fields: [contactId], references: [id])
+  faceImageUrl String?
+  faceVerifiedAt DateTime?
+  createdAt    DateTime @default(now())
+}
+
+model Contact {
+  id               Int             @id @default(autoincrement())
+  name             String
+  type             ContactType
+  email            String?
+  mobile           String?
+  city             String?
+  state            String?
+  pincode          String?
+  profileImageUrl  String?
+  isArchived       Boolean         @default(false)
+  createdAt        DateTime        @default(now())
+  users            User[]
+  purchaseOrders   PurchaseOrder[] @relation("POVendor")
+  vendorBills      VendorBill[]    @relation("BillVendor")
+  salesOrders      SalesOrder[]    @relation("SOVendor")
+  customerInvoices CustomerInvoice[] @relation("InvoiceVendor")
+  payments         Payment[]
+}
+
+model Product {
+  id                Int                 @id @default(autoincrement())
+  name              String
+  type              ProductType
+  salesPrice        Float
+  costPrice         Float?
+  category          String?
+  isArchived        Boolean             @default(false)
+  purchaseOrderLines PurchaseOrderLine[]
+  salesOrderLines   SalesOrderLine[]
+}
+
+model Account {
+  id               Int                @id @default(autoincrement())
+  name             String
+  type             AccountType
+  isArchived       Boolean            @default(false)
+  journals         Journal[]
+  journalEntryLines JournalEntryLine[]
+}
+
+model Journal {
+  id               Int            @id @default(autoincrement())
+  name             String
+  type             JournalType
+  defaultAccountId Int
+  defaultAccount   Account        @relation(fields: [defaultAccountId], references: [id])
+  journalEntries   JournalEntry[]
+}
+
+model JournalEntry {
+  id        Int               @id @default(autoincrement())
+  journalId Int
+  journal   Journal           @relation(fields: [journalId], references: [id])
+  entryDate DateTime
+  reference String?
+  sourceType SourceType
+  sourceId  Int
+  lines     JournalEntryLine[]
+  createdAt DateTime          @default(now())
+}
+
+model JournalEntryLine {
+  id               Int             @id @default(autoincrement())
+  journalEntryId   Int
+  journalEntry     JournalEntry    @relation(fields: [journalEntryId], references: [id])
+  accountId        Int
+  account          Account         @relation(fields: [accountId], references: [id])
+  analyticAccountId Int?
+  analyticAccount  AnalyticAccount? @relation(fields: [analyticAccountId], references: [id])
+  debit            Float           @default(0)
+  credit           Float           @default(0)
+}
+
+model PurchaseOrder {
+  id               Int                @id @default(autoincrement())
+  vendorId         Int
+  vendor           Contact            @relation("POVendor", fields: [vendorId], references: [id])
+  orderDate        DateTime
+  status           PurchaseOrderStatus @default(draft)
+  totalAmount      Float              @default(0)
+  analyticAccountId Int?
+  analyticAccount  AnalyticAccount?   @relation(fields: [analyticAccountId], references: [id])
+  lines            PurchaseOrderLine[]
+  vendorBill       VendorBill?
+}
+
+model PurchaseOrderLine {
+  id        Int           @id @default(autoincrement())
+  poId      Int
+  po        PurchaseOrder @relation(fields: [poId], references: [id])
+  productId Int
+  product   Product       @relation(fields: [productId], references: [id])
+  qty       Float
+  unitPrice Float
+  subtotal  Float
+}
+
+model VendorBill {
+  id          Int        @id @default(autoincrement())
+  poId        Int?     @unique
+  po          PurchaseOrder? @relation(fields: [poId], references: [id])
+  vendorId    Int
+  vendor      Contact    @relation("BillVendor", fields: [vendorId], references: [id])
+  billDate    DateTime
+  dueDate     DateTime
+  status      DocStatus  @default(posted)
+  totalAmount Float      @default(0)
+  paidAmount  Float      @default(0)
+  payments    Payment[]
+}
+
+model SalesOrder {
+  id               Int               @id @default(autoincrement())
+  customerId       Int
+  customer         Contact           @relation("SOVendor", fields: [customerId], references: [id])
+  orderDate        DateTime
+  status           SalesOrderStatus  @default(draft)
+  totalAmount      Float             @default(0)
+  taxAmount        Float             @default(0)
+  analyticAccountId Int?
+  analyticAccount  AnalyticAccount?  @relation(fields: [analyticAccountId], references: [id])
+  lines            SalesOrderLine[]
+  customerInvoice  CustomerInvoice?
+}
+
+model SalesOrderLine {
+  id         Int        @id @default(autoincrement())
+  soId       Int
+  so         SalesOrder @relation(fields: [soId], references: [id])
+  productId  Int
+  product    Product    @relation(fields: [productId], references: [id])
+  qty        Float
+  unitPrice  Float
+  taxPercent Float      @default(0)
+  subtotal   Float
+}
+
+model CustomerInvoice {
+  id          Int        @id @default(autoincrement())
+  soId        Int?     @unique
+  so          SalesOrder? @relation(fields: [soId], references: [id])
+  customerId  Int
+  customer    Contact    @relation("InvoiceVendor", fields: [customerId], references: [id])
+  invoiceDate DateTime
+  dueDate     DateTime
+  status      DocStatus  @default(posted)
+  totalAmount Float      @default(0)
+  taxAmount   Float      @default(0)
+  paidAmount  Float      @default(0)
+  payments    Payment[]
+}
+
+model Payment {
+  id          Int             @id @default(autoincrement())
+  direction   PaymentDirection
+  contactId   Int
+  contact     Contact         @relation(fields: [contactId], references: [id])
+  billId      Int?
+  bill        VendorBill?     @relation(fields: [billId], references: [id])
+  invoiceId   Int?
+  invoice     CustomerInvoice? @relation(fields: [invoiceId], references: [id])
+  method      PaymentMethod
+  amount      Float
+  paymentDate DateTime
+  createdAt   DateTime        @default(now())
+}
+
+model AnalyticAccount {
+  id                Int                @id @default(autoincrement())
+  name              String
+  type              AnalyticType
+  budgets           Budget[]
+  journalEntryLines JournalEntryLine[]
+  purchaseOrders    PurchaseOrder[]
+  salesOrders       SalesOrder[]
+}
+
+model Budget {
+  id                Int             @id @default(autoincrement())
+  name              String
+  periodStart       DateTime
+  periodEnd         DateTime
+  responsiblePerson String?
+  plannedAmount     Float
+  analyticAccountId Int
+  analyticAccount   AnalyticAccount @relation(fields: [analyticAccountId], references: [id])
+}

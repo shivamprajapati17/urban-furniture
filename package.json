@@ -1,0 +1,21 @@
+{
+  "name": "urban-furniture-accounts",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Urban Furniture - lightweight accounting SaaS (master data, purchase/sales cycles, auto-posted ledger, financial reports)",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c \"#8B5E34,#2F6F4E\" \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "npm run dev -w api",
+    "dev:web": "npm run dev -w web",
+    "db:push": "npm run db:push -w api",
+    "db:seed": "npm run db:seed -w api",
+    "build": "npm run build -w web",
+    "start:api": "npm run start -w api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
